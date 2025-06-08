@@ -11,6 +11,8 @@
 
 This repo contains a collection of scripts to **automatically configure Raspberry Pi devices** on first boot — with a focus on displaying system info via an OLED screen, and optional modular extensions (e.g., GitHub Actions runner, Tailscale).
 
+---
+
 ## 🧾 Features
 
 - 🖥️ **OLED info display** on boot  
@@ -23,17 +25,21 @@ This repo contains a collection of scripts to **automatically configure Raspberr
   - Future custom modules
 - 🧃 Fully headless & SSH-free provisioning using Raspberry Pi Imager
 
+---
+
 ## 🗂️ Structure
 
-```plaintext
-/
-├── firstrun.sh              # Main bootstrap script (always runs)
-├── system_info.py           # OLED display script
-├── system_info.service      # Systemd service unit for OLED
-├── optional.d/              # Drop-in directory for additional modules
-│   ├── github-runner.sh     # Optional GitHub Actions + Tailscale setup
-│   └── your-module.sh       # Add more scripts here
 ```
+/
+├── firstrun-user.sh          # Your custom one-time setup script
+├── system_info.py            # OLED display script
+├── system_info.service       # Systemd service unit for OLED
+├── optional.d/               # Drop-in directory for additional modules
+│   ├── github-runner.sh      # Optional GitHub Actions + Tailscale setup
+│   └── your-module.sh        # Add more scripts here
+```
+
+---
 
 ## 🚀 Usage
 
@@ -45,6 +51,8 @@ This repo contains a collection of scripts to **automatically configure Raspberr
   - `TAILSCALE_AUTHKEY`
 - Place additional `.sh` scripts in `optional.d/` as needed
 
+---
+
 ### 2. 🖼️ Flash via Raspberry Pi Imager
 
 1. Launch [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
@@ -52,22 +60,33 @@ This repo contains a collection of scripts to **automatically configure Raspberr
 3. Enable:
    - SSH
    - Wi-Fi (if needed)
-   - Set username/password
-   - ✅ Enable “Run a script after writing”
-4. Select firstrun.sh from this repo as the script to run
-5. Important: Before inserting the SD card into the Pi:
-    - Mount the boot partition (it will show up as a USB drive)
-    - Manually copy these files into the boot partition:
-        - system_info.py
-        - system_info.service
-        - The entire optional.d/ folder (if using optional modules)
-6. Eject the SD card and insert it into your Raspberry Pi
+   - Set username/password  
+   *(⚠️ At least one setting must be enabled to trigger `firstrun.sh` injection!)*
+4. Choose the OS and storage as usual, then **write the image**
+5. After flashing and **before booting**:
+   - Open the SD card’s `boot` partition (shows up as a USB drive)
+   - Copy the following files into the root of the `boot` partition:
+     ```
+     firstrun-user.sh
+     system_info.py
+     system_info.service
+     optional.d/ (entire folder, if using optional modules)
+     ```
+6. **Open the file** `firstrun.sh` (already present in the `boot` partition) in a text editor
+7. **Right above the final line** `exit 0`, add this line:
+   ```bash
+   bash /boot/firstrun-user.sh
+   ```
+   So the file should look like:
+   ```bash
+   ...
+   bash /boot/firstrun-user.sh
+   exit 0
+   ```
+8. Save the file, safely eject the SD card, and insert it into your Raspberry Pi
+9. On first boot, your custom script and all configuration will run once and automatically clean itself up
 
-### 3. 🧠 First Boot
-
-- The OLED display is installed and starts automatically
-- Each script in `optional.d/` is executed once at boot
-- Logs are written to `/boot/<scriptname>.log` for debugging
+---
 
 ## 🛠️ Requirements
 
@@ -76,6 +95,8 @@ This repo contains a collection of scripts to **automatically configure Raspberr
   - Push button and optional LED connected to GPIO
 - Raspberry Pi OS (Bookworm recommended)
 - No monitor, keyboard, or SSH required — runs fully headless
+
+---
 
 ## 💡 Example Modules
 
@@ -86,15 +107,21 @@ This repo contains a collection of scripts to **automatically configure Raspberr
 - `my-other-module.sh`:  
   Add setup logic for sensors, custom apps, or automation tools
 
+---
+
 ## 📦 Credits
 
 Based on the original [system_info](https://github.com/leelooauto/system_info) project by [@leelooauto](https://www.thingiverse.com/sliderbor/designs).  
 Adapted and extended for modular, headless provisioning.
 
+---
+
 ## ⚠️ Security Note
 
 > This repo is designed to be used **privately** or with your own automation workflows.  
 > Do **not** commit secrets like GitHub tokens or Tailscale auth keys to this repo.
+
+---
 
 ## 📬 Feedback
 
