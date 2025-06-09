@@ -30,6 +30,22 @@ FIRSTUSERHOME=$(getent passwd 1000 | cut -d: -f6 2>/dev/null || echo "/home/$FIR
 
 echo "$(date): Detected first user: $FIRSTUSER ($FIRSTUSERHOME)"
 
+# Wait for network connectivity
+echo "$(date): ⏳ Waiting for network connectivity..."
+for i in {1..30}; do
+  if hostname -I | grep -q '\.'; then
+    echo "$(date): ✅ Network is up!"
+    break
+  fi
+  echo "$(date): Waiting for network... attempt $i/30"
+  sleep 2
+done
+
+if ! hostname -I | grep -q '\.'; then
+  echo "$(date): ❌ No network after 60s. Aborting setup."
+  exit 1
+fi
+
 # Update and install base dependencies
 echo "$(date): 🔧 Starting base system setup..."
 log_exec apt update

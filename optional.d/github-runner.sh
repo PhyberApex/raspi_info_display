@@ -40,20 +40,6 @@ if [ "$TAILSCALE_AUTHKEY" = "tskey-xxxxxxxxxxxxxxxxxxxxxxxx" ]; then
     exit 1
 fi
 
-echo "⏳ Waiting for network..."
-for i in {1..30}; do
-  if hostname -I | grep -q '\.'; then
-    echo "✅ Network is up!"
-    break
-  fi
-  sleep 2
-done
-
-if ! hostname -I | grep -q '\.'; then
-  echo "❌ No network after 60s. Aborting runner setup."
-  exit 1
-fi
-
 echo "📥 Installing dependencies..."
 apt update
 apt install -y curl unzip jq python3-pip
