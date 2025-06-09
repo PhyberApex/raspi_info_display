@@ -31,7 +31,7 @@ This repo contains a collection of scripts to **automatically configure Raspberr
 
 ```
 /
-├── firstrun-user.sh          # Your custom one-time setup script
+├── firstrun-addon.sh         # Addon script that integrates with Pi Imager's firstrun.sh
 ├── system_info.py            # OLED display script
 ├── system_info.service       # Systemd service unit for OLED
 ├── optional.d/               # Drop-in directory for additional modules
@@ -57,34 +57,46 @@ This repo contains a collection of scripts to **automatically configure Raspberr
 
 1. Launch [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
 2. Press `Ctrl + Shift + X` for **Advanced Settings**
-3. Enable:
-   - SSH
-   - Wi-Fi (if needed)
-   - Set username/password  
-   *(⚠️ At least one setting must be enabled to trigger `firstrun.sh` injection!)*
+3. **🚨 CRITICAL**: Enable at least one setting to trigger first-run script:
+   - **Enable SSH** (strongly recommended)
+   - Configure Wi-Fi (if needed)  
+   - Set custom username/password
+   
+   *(⚠️ **Without enabling at least one setting, Pi Imager won't create a `firstrun.sh` file!**)*
+
 4. Choose the OS and storage as usual, then **write the image**
+
 5. After flashing and **before booting**:
-   - Open the SD card’s `boot` partition (shows up as a USB drive)
-   - Copy the following files into the root of the `boot` partition:
+   - Open the SD card's `boot` partition (shows up as a USB drive)
+   - Copy these files to the **root** of the `boot` partition:
      ```
-     firstrun-user.sh
+     firstrun-addon.sh
      system_info.py
      system_info.service
      optional.d/ (entire folder, if using optional modules)
      ```
-6. **Open the file** `firstrun.sh` (already present in the `boot` partition) in a text editor
-7. **Right above the final line** `exit 0`, add this line:
-   ```bash
-   bash /boot/firstrun-user.sh
-   ```
-   So the file should look like:
-   ```bash
-   ...
-   bash /boot/firstrun-user.sh
-   exit 0
-   ```
-8. Save the file, safely eject the SD card, and insert it into your Raspberry Pi
-9. On first boot, your custom script and all configuration will run once and automatically clean itself up
+
+6. **Integration with Pi Imager's firstrun.sh:**
+   - Open `firstrun.sh` (created by Pi Imager) in a text editor
+   - Find the lines near the end:
+     ```bash
+     rm -f /boot/firstrun.sh
+     sed -i 's| systemd.run.*||g' /boot/cmdline.txt
+     exit 0
+     ```
+   - **Replace them with:**
+     ```bash
+     # Run Pi Info Display addon
+     bash "$(dirname "${BASH_SOURCE[0]}")/firstrun-addon.sh"
+     
+     rm -f /boot/firstrun.sh
+     sed -i 's| systemd.run.*||g' /boot/cmdline.txt
+     exit 0
+     ```
+
+7. **Safely eject** the SD card and insert it into your Raspberry Pi
+
+8. **First boot**: Your Pi will automatically run the setup script and configure everything
 
 ---
 
@@ -95,6 +107,22 @@ This repo contains a collection of scripts to **automatically configure Raspberr
   - Push button and optional LED connected to GPIO
 - Raspberry Pi OS (Bookworm recommended)
 - No monitor, keyboard, or SSH required — runs fully headless
+
+---
+
+## 🐛 Troubleshooting
+
+**Script not running?**
+1. Check you enabled SSH/WiFi/user in Pi Imager advanced settings
+2. Verify `firstrun.sh` exists in the boot partition after flashing
+3. Check `/boot/firstrun.log` and `/boot/firstrun-addon.log` for detailed error messages
+4. Ensure all files were copied to the boot partition root (not in subfolders)
+5. Verify the addon call was added correctly to `firstrun.sh`
+
+**OLED not working?**
+- Verify I2C wiring (SDA to GPIO 2, SCL to GPIO 3)
+- Check that I2C is enabled: `sudo raspi-config` → Interface Options → I2C
+- Test with: `sudo i2cdetect -y 1` (should show device at 0x3c)
 
 ---
 
