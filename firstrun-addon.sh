@@ -93,7 +93,7 @@ if [ -d "$OPTIONAL_DIR" ]; then
     for script in "$OPTIONAL_DIR"/*.sh; do
         [ -f "$script" ] || continue
         echo "$(date): ▶️ Running optional module: $(basename "$script")"
-        bash "$script" &>> "$BOOT_DIR/$(basename "$script").log"
+        bash "$script" &>> "$BOOT_DIR/firstrun-addon-$(basename "$script").log"
         echo "$(date): ✅ Completed: $(basename "$script")"
     done
 else
