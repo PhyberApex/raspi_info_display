@@ -1,9 +1,6 @@
 # raspi_info_display
 
 [![Raspberry Pi OS](https://img.shields.io/badge/platform-raspberry%20pi%20os-red?logo=raspberrypi)](https://www.raspberrypi.com/software/)
-[![Python 3](https://img.shields.io/badge/python-3.9%2B-blue.svg?logo=python)](https://www.python.org/)
-[![Systemd](https://img.shields.io/badge/init-systemd-007ec6.svg?logo=linux)](https://freedesktop.org/wiki/Software/systemd/)
-[![Headless Setup](https://img.shields.io/badge/headless-yes-success)](#)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Modular Raspberry Pi bootstrap system  
@@ -31,11 +28,13 @@ This repo contains a collection of scripts to **automatically configure Raspberr
 
 ```
 /
-├── firstrun-addon.sh         # Addon script that integrates with Pi Imager's firstrun.sh
-├── system_info.py            # OLED display script
-├── system_info.service       # Systemd service unit for OLED
-├── optional.d/               # Drop-in directory for additional modules
-│   ├── github-runner.sh      # Optional GitHub Actions + Tailscale setup
+├── firstrun-addon.sh            # Addon script that integrates with Pi Imager's firstrun.sh
+├── system_info.py               # OLED display script
+├── system_info.service          # Systemd service unit for OLED
+├── optional.d/                  # Drop-in directory for additional modules
+│   ├── github-runner-ansible.sh # Optional GitHub Actions for my ansible repo
+│   ├── github-runner-overlay.sh # Optional GitHub Actions for my overlay repo
+│   ├── tailscale.sh             # Optional Tailscale setup
 │   └── your-module.sh        # Add more scripts here
 ```
 

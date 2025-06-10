@@ -4,10 +4,12 @@ set -e
 ### CONFIG ###
 # These MUST be set before running - script will exit if still default values
 GITHUB_REPO_URL="https://github.com/YOUR-ORG/YOUR-REPO"
-RUNNER_NAME="pi-tailscale"
+RUNNER_NAME="pi-runner"
 GITHUB_RUNNER_TOKEN="ghr_xxxxxxxxxxxxxxxxxxxxxxxxx"
-TAILSCALE_AUTHKEY="tskey-xxxxxxxxxxxxxxxxxxxxxxxx"
-RUNNER_USER="runner"
+RUNNER_USER="runner2"
+SMB_USER="SMB_USER"
+SMB_PASSWORD="SMB_PASSWORD"
+SMB_SHARE="IP/SHARE"
 ##############
 
 echo "🔍 GitHub Actions Runner Setup Starting..."
@@ -33,32 +35,21 @@ if [ "$GITHUB_RUNNER_TOKEN" = "ghr_xxxxxxxxxxxxxxxxxxxxxxxxx" ]; then
     exit 1
 fi
 
-if [ "$TAILSCALE_AUTHKEY" = "tskey-xxxxxxxxxxxxxxxxxxxxxxxx" ]; then
-    echo "❌ ERROR: TAILSCALE_AUTHKEY is not configured!"
-    echo "   Please set a real Tailscale auth key."
-    echo "   Get one from: https://login.tailscale.com/admin/settings/keys"
+if [ "$SMB_USER" = "SMB_USER" ]; then
+    echo "❌ ERROR: SMB_USER is not configured!"
+    echo "   Please edit this script."
     exit 1
 fi
 
-echo "📥 Installing dependencies..."
-apt update
-apt install -y curl unzip jq python3-pip
-
-echo "🐍 Installing Ansible..."
-if ! pip3 install --break-system-packages ansible; then
-    echo "❌ Failed to install Ansible"
+if [ "$SMB_PASSWORD" = "SMB_PASSWORD" ]; then
+    echo "❌ ERROR: SMB_PASSWORD is not configured!"
+    echo "   Please edit this script."
     exit 1
 fi
 
-echo "🔌 Installing Tailscale..."
-if ! curl -fsSL https://tailscale.com/install.sh | sh; then
-    echo "❌ Failed to install Tailscale"
-    exit 1
-fi
-
-echo "🌐 Connecting to Tailscale..."
-if ! tailscale up --authkey "$TAILSCALE_AUTHKEY" --ssh --hostname "$RUNNER_NAME"; then
-    echo "❌ Failed to connect to Tailscale"
+if [ "$SMB_SHARE" = "IP/SHARE" ]; then
+    echo "❌ ERROR: SMB_SHARE is not configured!"
+    echo "   Please edit this script."
     exit 1
 fi
 
@@ -69,6 +60,12 @@ if ! id "$RUNNER_USER" &>/dev/null; then
 else
     echo "ℹ️  User $RUNNER_USER already exists"
 fi
+
+echo "📥 Preparing mount, adding it into fstab and mounting..."
+mkdir -p /home/$RUNNER_USER/mount
+chown $RUNNER_USER:$RUNNER_USER /home/$RUNNER_USER/mount
+echo "//$SMB_SHARE /home/runner2/mount cifs username=$SMB_USER,password=$SMB_PASSWORD,uid=$RUNNER_USER,gid=$RUNNER_USER,vers=3.0,_netdev,nofail 0 0" >> /etc/fstab
+mount-a
 
 echo "🔍 Gathering system labels..."
 ARCH=$(uname -m)
@@ -175,5 +172,4 @@ else
     systemctl list-units actions.runner.* --no-pager || true
 fi
 
-echo "🔒 Security reminder: Consider removing sensitive tokens from this script!"
 echo "🎉 Setup complete! The runner should now be visible in your GitHub repository."
